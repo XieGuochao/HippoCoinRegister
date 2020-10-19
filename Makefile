@@ -1,13 +1,13 @@
 .PHONY: clean
 
 server-build:
-	go build -o bin/server register/main.go 
+	go build -o bin/hippo-register hippo-register/main.go 
 
 server: server-build
-	./bin/server
+	./bin/hippo-register
 
 server-bg: server-build
-	./bin/server &
+	./bin/hippo-register &
 
 test: server-bg
 	go test ./lib

@@ -39,6 +39,12 @@ func (client *Client) Addresses(number int, reply *[]byte) error {
 	return client.c.Call(HippoAddressServiceName+".Addresses", number, reply)
 }
 
+// AddressesRefresh ...
+// Get up to 30 addresses.
+func (client *Client) AddressesRefresh(refresh RefreshStruct, reply *[]byte) error {
+	return client.c.Call(HippoAddressServiceName+".AddressesRefresh", refresh, reply)
+}
+
 // Close ...
 func (client *Client) Close() {
 	client.c.Close()

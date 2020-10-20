@@ -13,4 +13,4 @@ test: server-bg
 	go test ./lib
 
 clean:
-	rm build/*
+	rm bin/*

@@ -2,14 +2,13 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"log"
 	"net"
 	"net/rpc"
 	"sync"
 	"time"
 
-	_ "github.com/XieGuochao/HippoCoinRegister/lib"
+	"github.com/XieGuochao/HippoCoinRegister/lib"
 )
 
 const (
@@ -33,70 +32,8 @@ const (
 	Threshold = 0.2
 )
 
-// cache
-var cache sync.Map
-
-// Addresses ...
-type Addresses = []string
-
-// HippoAddressServiceInterface ...
-type HippoAddressServiceInterface = interface {
-	Ping(request string, reply *string) error
-}
-
-// RegisterHippoAddress ...
-func RegisterHippoAddress(svc HippoAddressServiceInterface) error {
-	return rpc.RegisterName(HippoAddressServiceName, svc)
-}
-
-// ServiceStruct ...
-type ServiceStruct struct {
-}
-
-// Ping ...
-func (s *ServiceStruct) Ping(request string, reply *string) error {
-	log.Println("Ping")
-	return nil
-}
-
-// Register ...
-func (s *ServiceStruct) Register(address string, reply *string) error {
-	log.Println("Register address:", address)
-	cache.Store(address, time.Now().Unix())
-	return nil
-}
-
 func expired(t, now int64) bool {
 	return now-t > TTL
-}
-
-// Addresses ...
-func (s *ServiceStruct) Addresses(number int, reply *[]byte) error {
-	log.Println("Query addresses:", number)
-	if number > MaxQuery || number < 0 {
-		number = MaxQuery
-	}
-
-	addresses := new(Addresses)
-	*addresses = make([]string, MaxQuery)
-	now := time.Now().Unix()
-	count := 0
-	cache.Range(func(key interface{}, value interface{}) bool {
-		// Check invalid.
-		if expired(value.(int64), now) {
-			cache.Delete(key)
-		} else {
-			(*addresses)[count] = key.(string)
-			count++
-		}
-		return count < number
-	})
-	(*addresses) = (*addresses)[:count]
-	log.Println(addresses)
-
-	b, _ := json.Marshal(*addresses)
-	*reply = b
-	return nil
 }
 
 // clearCycle
@@ -139,7 +76,7 @@ func clearCache(ctx context.Context, c *sync.Map) {
 
 func main() {
 	log.Println("register server starts...")
-	RegisterHippoAddress(new(ServiceStruct))
+	lib.RegisterHippoAddress(new(lib.ServiceStruct))
 	listener, err := net.Listen("tcp", ":9325")
 	if err != nil {
 		log.Fatal("ListenTCP error:", err)
@@ -150,7 +87,7 @@ func main() {
 	go func() {
 		for {
 			ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*10)
-			clearCache(ctx, &cache)
+			clearCache(ctx, &lib.Cache)
 			<-ctx.Done()
 			time.Sleep(time.Second)
 			cancel()

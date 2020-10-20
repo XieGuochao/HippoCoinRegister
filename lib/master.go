@@ -30,8 +30,8 @@ const (
 	Threshold = 0.2
 )
 
-// cache
-var cache sync.Map
+// Cache ...
+var Cache sync.Map
 
 // Addresses ...
 type Addresses = []string
@@ -39,6 +39,9 @@ type Addresses = []string
 // HippoAddressServiceInterface ...
 type HippoAddressServiceInterface = interface {
 	Ping(request string, reply *string) error
+	Register(address string, reply *string) error
+	Addresses(number int, reply *[]byte) error
+	AddressesRefresh(refresh RefreshStruct, reply *[]byte) error
 }
 
 // RegisterHippoAddress ...
@@ -59,7 +62,7 @@ func (s *ServiceStruct) Ping(request string, reply *string) error {
 // Register ...
 func (s *ServiceStruct) Register(address string, reply *string) error {
 	log.Println("Register address:", address)
-	cache.Store(address, time.Now().Unix())
+	Cache.Store(address, time.Now().Unix())
 	return nil
 }
 
@@ -67,29 +70,55 @@ func expired(t, now int64) bool {
 	return now-t > TTL
 }
 
-// Addresses ...
-func (s *ServiceStruct) Addresses(number int, reply *[]byte) error {
-	log.Println("Query addresses:", number)
+func getAddresses(number int, address string) *Addresses {
 	if number > MaxQuery || number < 0 {
 		number = MaxQuery
 	}
-
 	addresses := new(Addresses)
 	*addresses = make([]string, MaxQuery)
 	now := time.Now().Unix()
 	count := 0
-	cache.Range(func(key interface{}, value interface{}) bool {
+	Cache.Range(func(key interface{}, value interface{}) bool {
 		// Check invalid.
 		if expired(value.(int64), now) {
-			cache.Delete(key)
-		} else {
+			Cache.Delete(key)
+		} else if key.(string) != address {
 			(*addresses)[count] = key.(string)
 			count++
 		}
 		return count < number
 	})
 	(*addresses) = (*addresses)[:count]
+	return addresses
+}
+
+// Addresses ...
+func (s *ServiceStruct) Addresses(number int, reply *[]byte) error {
+	log.Println("Query addresses:", number)
+
+	addresses := getAddresses(number, "")
 	log.Println(addresses)
+
+	b, _ := json.Marshal(*addresses)
+	*reply = b
+	return nil
+}
+
+// RefreshStruct ...
+type RefreshStruct struct {
+	Number  int
+	Address string
+}
+
+// AddressesRefresh ...
+// Get the addresses and refresh expiration
+func (s *ServiceStruct) AddressesRefresh(refresh RefreshStruct, reply *[]byte) error {
+	number, address := refresh.Number, refresh.Address
+	log.Println("Query addresses and refresh:", number)
+
+	addresses := getAddresses(number, address)
+	log.Println(addresses)
+	Cache.Store(address, time.Now().Unix())
 
 	b, _ := json.Marshal(*addresses)
 	*reply = b

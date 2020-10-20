@@ -40,11 +40,14 @@ func expired(t, now int64) bool {
 func clearCycle(ctx context.Context, c *sync.Map) {
 	cleared := 1
 	count := 1
+	total := 0
 	t := time.Now().Unix()
 
-	for float64(cleared)/float64(count) > Threshold {
+	for float64(cleared)/float64(count) > Threshold && total < NumPerCycle {
 		cleared = 1
 		count = 1
+		total++
+
 		c.Range(func(key, value interface{}) bool {
 			select {
 			case <-ctx.Done():
@@ -56,7 +59,8 @@ func clearCycle(ctx context.Context, c *sync.Map) {
 						cleared++
 					}
 					count++
-					if count > NumPerCycle {
+					total++
+					if total > NumPerCycle {
 						return false
 					}
 				}
@@ -89,7 +93,8 @@ func main() {
 			ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*10)
 			clearCache(ctx, &lib.Cache)
 			<-ctx.Done()
-			time.Sleep(time.Second)
+			log.Println("clear done 1 cycle")
+			time.Sleep(time.Second * 10)
 			cancel()
 		}
 	}()

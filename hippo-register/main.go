@@ -90,11 +90,11 @@ func main() {
 
 	go func() {
 		for {
-			ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*10)
+			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 			clearCache(ctx, &lib.Cache)
 			<-ctx.Done()
 			log.Println("clear done 1 cycle")
-			time.Sleep(time.Second * 10)
+			time.Sleep(time.Second * TTL)
 			cancel()
 		}
 	}()

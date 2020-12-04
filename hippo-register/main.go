@@ -5,6 +5,7 @@ import (
 	"log"
 	"net"
 	"net/rpc"
+	"runtime"
 	"sync"
 	"time"
 
@@ -79,6 +80,8 @@ func clearCache(ctx context.Context, c *sync.Map) {
 }
 
 func main() {
+	runtime.GOMAXPROCS(4)
+
 	log.Println("register server starts...")
 	lib.RegisterHippoAddress(new(lib.ServiceStruct))
 	listener, err := net.Listen("tcp", ":9325")

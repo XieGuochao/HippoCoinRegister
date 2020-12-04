@@ -14,8 +14,8 @@ const (
 	HippoAddressServiceName = "github.com/XieGuochao/HippoCoinRegister"
 
 	// TTL ...
-	// The TTL is 10 seconds
-	TTL = 10
+	// The TTL is 60 seconds
+	TTL = 60
 
 	// MaxQuery ...
 	MaxQuery = 30

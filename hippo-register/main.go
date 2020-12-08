@@ -89,6 +89,8 @@ func main() {
 		log.Fatal("ListenTCP error:", err)
 	}
 
+	log.Println("outer IP:", lib.GetOutboundIP().String())
+
 	// clear cache for every 10 seconds
 
 	go func() {

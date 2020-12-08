@@ -13,3 +13,7 @@ The register server for HippoCoin using go RPC.
 ## Use the client library
 
 Go to `client.go` and `client_test.go` for more information.
+
+# For more detail
+
+Please refer to [github.com/XieGuochao/HippoCoin](https://github.com/XieGuochao/HippoCoin).
